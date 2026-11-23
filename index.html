@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nghe Lời Khuyên</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font chữ Inter hỗ trợ tiếng Việt mượt mà -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                        'float': 'float 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Hiệu ứng vẽ nét SVG khi xuất hiện */
+        .draw-stroke {
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .reveal-active .draw-stroke {
+            stroke-dashoffset: 0;
+        }
+        .delay-stroke {
+            transition-delay: 0.25s;
+        }
+        .delay-stroke-2 {
+            transition-delay: 0.45s;
+        }
+
+        /* Hiệu ứng chuyển đổi màn hình */
+        .screen-transition {
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden selection:bg-amber-500 selection:text-zinc-950">
+
+    <!-- Ánh sáng nền tinh tế (Ambient Glow) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
+        <div id="ambient-glow" class="w-[320px] h-[320px] sm:w-[500px] sm:h-[500px] rounded-full bg-amber-500/10 blur-[100px] transition-colors duration-1000"></div>
+    </div>
+
+    <!-- Container chính -->
+    <main class="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center justify-center">
+
+        <!-- MÀN HÌNH 1: NÚT BẮT ĐẦU -->
+        <section id="initial-screen" class="screen-transition flex flex-col items-center text-center space-y-6">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs font-medium text-zinc-400 tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                <span>Thông điệp vũ trụ</span>
+            </div>
+
+            <button 
+                id="btn-advice"
+                type="button"
+                aria-label="Nghe lời khuyên"
+                class="group relative inline-flex items-center justify-center px-8 py-5 sm:px-10 sm:py-6 text-lg sm:text-2xl font-bold text-zinc-950 bg-gradient-to-br from-amber-300 via-amber-400 to-orange-500 rounded-2xl shadow-[0_0_40px_-10px_rgba(251,191,36,0.5)] hover:shadow-[0_0_55px_-5px_rgba(251,191,36,0.75)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400/40"
+            >
+                <!-- Viền sáng bên trong -->
+                <span class="absolute inset-0 rounded-2xl border border-white/30 pointer-events-none"></span>
+                
+                <span class="flex items-center gap-3">
+                    <!-- Icon tia sáng nhỏ -->
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-zinc-950 transition-transform duration-300 group-hover:rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                    <span>Nghe lời khuyên</span>
+                </span>
+            </button>
+
+            <p class="text-xs sm:text-sm text-zinc-500">Chạm vào nút để nhận chân lý hôm nay</p>
+        </section>
+
+        <!-- MÀN HÌNH 2: HIỂN THỊ LỜI KHUYÊN & MINH HỌA -->
+        <section id="advice-screen" class="screen-transition hidden opacity-0 scale-95 w-full flex-col items-center text-center">
+            
+            <!-- Card trung tâm -->
+            <div class="w-full bg-zinc-900/75 backdrop-blur-xl border border-zinc-800/90 rounded-3xl p-6 sm:p-10 shadow-2xl">
+                
+                <!-- Tiêu đề lời khuyên -->
+                <div class="mb-8 sm:mb-10">
+                    <span class="inline-block text-xs font-semibold uppercase tracking-widest text-amber-400/90 mb-2">
+                        Chân lý thức tỉnh
+                    </span>
+                    <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-100 to-zinc-400 leading-tight">
+                        "Bỏ quay hũ, xây cầu đi"
+                    </h1>
+                </div>
+
+                <!-- Khu vực 2 hình minh họa song song -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 w-full mb-8">
+                    
+                    <!-- BÊN TRÁI: Nút quay Lucky Roller + Dấu X đỏ -->
+                    <div class="group relative flex flex-col items-center justify-between p-6 rounded-2xl bg-zinc-950/80 border border-rose-500/25 hover:border-rose-500/50 transition-colors">
+                        <div class="w-full flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-lg">
+                                Ngừng lại
+                            </span>
+                            <span class="text-xs text-zinc-500 font-medium">Lucky Roller</span>
+                        </div>
+
+                        <!-- SVG Minh họa nút quay Lucky Roller bị gạch chéo X -->
+                        <div class="relative w-36 h-36 sm:w-40 sm:h-40 my-2 flex items-center justify-center">
+                            <svg class="w-full h-full overflow-visible" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Đế nút bấm 3D -->
+                                <ellipse cx="80" cy="116" rx="54" ry="20" fill="#27272A" stroke="#3F3F46" stroke-width="2"/>
+                                <path d="M26 98V116C26 127.046 50.1766 136 80 136C109.823 136 134 127.046 134 116V98" fill="#18181B" stroke="#3F3F46" stroke-width="2"/>
+                                
+                                <!-- Mặt nút quay Lucky Roller (màu vàng/cam tối màu) -->
+                                <ellipse cx="80" cy="96" rx="52" ry="20" fill="#78350F"/>
+                                <ellipse cx="80" cy="92" rx="50" ry="18" fill="url(#rollerGrad)" stroke="#FBBF24" stroke-width="2"/>
+                                
+                                <!-- Các vạch chia vòng quay trên mặt nút -->
+                                <line x1="80" y1="74" x2="80" y2="110" stroke="#92400E" stroke-width="1.5" stroke-dasharray="3 3"/>
+                                <line x1="30" y1="92" x2="130" y2="92" stroke="#92400E" stroke-width="1.5" stroke-dasharray="3 3"/>
+                                
+                                <!-- Chữ SPIN mờ trên nút -->
+                                <text x="80" y="96" text-anchor="middle" fill="#451A03" font-family="Inter, sans-serif" font-weight="900" font-size="13" letter-spacing="1.5">SPIN</text>
+
+                                <!-- Vòng tròn cảnh báo mờ phía sau -->
+                                <circle cx="80" cy="80" r="64" fill="#EF4444" fill-opacity="0.08" stroke="#EF4444" stroke-opacity="0.3" stroke-width="2" stroke-dasharray="6 6"/>
+
+                                <!-- DẤU X ĐỎ ĐẬM ĐÈ LÊN TRÊN -->
+                                <g filter="url(#redGlow)">
+                                    <path class="draw-stroke delay-stroke" d="M42 42L118 118" stroke="#EF4444" stroke-width="14" stroke-linecap="round"/>
+                                    <path class="draw-stroke delay-stroke-2" d="M118 42L42 118" stroke="#EF4444" stroke-width="14" stroke-linecap="round"/>
+                                    <!-- Highlight trắng nhẹ tạo độ khối cho dấu X -->
+                                    <path class="draw-stroke delay-stroke" d="M42 42L118 118" stroke="#FCA5A5" stroke-width="3" stroke-linecap="round" stroke-opacity="0.6"/>
+                                    <path class="draw-stroke delay-stroke-2" d="M118 42L42 118" stroke="#FCA5A5" stroke-width="3" stroke-linecap="round" stroke-opacity="0.6"/>
+                                </g>
+
+                                <defs>
+                                    <linearGradient id="rollerGrad" x1="30" y1="74" x2="130" y2="110" gradientUnits="userSpaceOnUse">
+                                        <stop stop-color="#F59E0B"/>
+                                        <stop offset="1" stop-color="#B45309"/>
+                                    </linearGradient>
+                                    <filter id="redGlow" x="20" y="20" width="120" height="120" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#EF4444" flood-opacity="0.55"/>
+                                    </filter>
+                                </defs>
+                            </svg>
+                        </div>
+
+                        <p class="text-sm font-semibold text-zinc-300 mt-2">Bỏ quay hũ may rủi</p>
+                    </div>
+
+                    <!-- BÊN PHẢI: Xây cầu + Dấu tích xanh -->
+                    <div class="group relative flex flex-col items-center justify-between p-6 rounded-2xl bg-zinc-950/80 border border-emerald-500/25 hover:border-emerald-500/50 transition-colors">
+                        <div class="w-full flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                                Hành động
+                            </span>
+                            <span class="text-xs text-zinc-500 font-medium">Kiến thiết</span>
+                        </div>
+
+                        <!-- SVG Minh họa cây cầu vững chắc + Dấu tích xanh -->
+                        <div class="relative w-36 h-36 sm:w-40 sm:h-40 my-2 flex items-center justify-center">
+                            <svg class="w-full h-full overflow-visible" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Vòng tròn nền xanh nhẹ -->
+                                <circle cx="80" cy="80" r="64" fill="#10B981" fill-opacity="0.08" stroke="#10B981" stroke-opacity="0.3" stroke-width="2"/>
+
+                                <!-- Mặt nước dưới chân cầu -->
+                                <path d="M22 122C34 118 46 126 58 122C70 118 82 126 94 122C106 118 118 126 138 122" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.6"/>
+                                <path d="M32 131C44 128 54 134 66 131C78 128 88 134 100 131C112 128 120 133 128 131" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-opacity="0.35"/>
+
+                                <!-- Trụ cầu trái & phải -->
+                                <rect x="44" y="54" width="8" height="64" rx="2" fill="#94A3B8"/>
+                                <rect x="108" y="54" width="8" height="64" rx="2" fill="#94A3B8"/>
+
+                                <!-- Dây văng cầu (Suspension cables) -->
+                                <path d="M20 96Q36 82 48 58" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M48 58Q80 94 112 58" stroke="#CBD5E1" stroke-width="2.5" stroke-linecap="round"/>
+                                <path d="M112 58Q124 82 140 96" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+
+                                <!-- Dây treo đứng -->
+                                <line x1="64" y1="72" x2="64" y2="98" stroke="#64748B" stroke-width="1.5"/>
+                                <line x1="80" y1="76" x2="80" y2="98" stroke="#64748B" stroke-width="1.5"/>
+                                <line x1="96" y1="72" x2="96" y2="98" stroke="#64748B" stroke-width="1.5"/>
+
+                                <!-- Mặt cầu ngang vững chãi -->
+                                <rect x="16" y="96" width="128" height="8" rx="3" fill="#E2E8F0"/>
+                                <rect x="16" y="101" width="128" height="3" rx="1.5" fill="#64748B"/>
+
+                                <!-- DẤU TÍCH XANH ĐẬM NỔI BẬT -->
+                                <g filter="url(#greenGlow)">
+                                    <circle cx="118" cy="44" r="24" fill="#064E3B" stroke="#10B981" stroke-width="2.5"/>
+                                    <path class="draw-stroke delay-stroke-2" d="M107 44.5L114.5 52L130 36.5" stroke="#10B981" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path class="draw-stroke delay-stroke-2" d="M107 44.5L114.5 52L130 36.5" stroke="#A7F3D0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </g>
+
+                                <defs>
+                                    <filter id="greenGlow" x="82" y="10" width="72" height="72" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#10B981" flood-opacity="0.55"/>
+                                    </filter>
+                                </defs>
+                            </svg>
+                        </div>
+
+                        <p class="text-sm font-semibold text-zinc-300 mt-2">Tập trung xây cầu vững chắc</p>
+                    </div>
+                </div>
+
+                <!-- Nút Nghe lại -->
+                <div class="pt-2 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span class="text-xs text-zinc-500">Đã tiếp thu thông điệp?</span>
+                    <button 
+                        id="btn-replay"
+                        type="button"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-200 text-sm font-semibold border border-zinc-700/80 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                    >
+                        <svg class="w-4 h-4 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                        <span>Nghe lại</span>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * Khởi tạo bộ tổng hợp âm thanh bằng Web Audio API (không cần file âm thanh ngoài)
+         */
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            // Âm thanh hợp âm thức tỉnh khi bấm "Nghe lời khuyên"
+            playReveal() {
+                try {
+                    this.init();
+                    const now = this.ctx.currentTime;
+                    
+                    // Tạo chuỗi nốt hài hòa (C5 - E5 - G5 - B5) tạo cảm giác "thức tỉnh"
+                    const notes = [523.25, 659.25, 783.99, 987.77];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        
+                        osc.type = idx === 3 ? 'triangle' : 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                        
+                        gain.gain.setValueAtTime(0.001, now + idx * 0.06);
+                        gain.gain.exponentialRampToValueAtTime(0.12, now + idx * 0.06 + 0.03);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.06 + 0.65);
+                        
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        
+                        osc.start(now + idx * 0.06);
+                        osc.stop(now + idx * 0.06 + 0.7);
+                    });
+                } catch (e) {
+                    // Bỏ qua nếu trình duyệt chặn audio
+                }
+            }
+
+            // Âm thanh click nhẹ khi bấm "Nghe lại"
+            playReset() {
+                try {
+                    this.init();
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(420, now);
+                    osc.frequency.exponentialRampToValueAtTime(260, now + 0.12);
+                    
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } catch (e) {
+                    // Bỏ qua lỗi audio nếu có
+                }
+            }
+        }
+
+        // Quản lý trạng thái giao diện
+        document.addEventListener('DOMContentLoaded', () => {
+            const sfx = new SoundEffects();
+            const initialScreen = document.getElementById('initial-screen');
+            const adviceScreen = document.getElementById('advice-screen');
+            const btnAdvice = document.getElementById('btn-advice');
+            const btnReplay = document.getElementById('btn-replay');
+            const ambientGlow = document.getElementById('ambient-glow');
+
+            // Hàm chuyển sang màn hình lời khuyên
+            function showAdvice() {
+                sfx.playReveal();
+
+                // Ẩn màn hình đầu
+                initialScreen.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                
+                // Đổi màu ánh sáng nền sang tông xanh ngọc nhẹ
+                ambientGlow.classList.remove('bg-amber-500/10');
+                ambientGlow.classList.add('bg-emerald-500/10');
+
+                setTimeout(() => {
+                    initialScreen.classList.add('hidden');
+                    adviceScreen.classList.remove('hidden');
+                    adviceScreen.classList.add('flex');
+
+                    // Kích hoạt reflow để chạy animation mượt
+                    void adviceScreen.offsetWidth;
+
+                    adviceScreen.classList.remove('opacity-0', 'scale-95');
+                    adviceScreen.classList.add('opacity-100', 'scale-100', 'reveal-active');
+                }, 260);
+            }
+
+            // Hàm quay lại màn hình ban đầu
+            function resetScreen() {
+                sfx.playReset();
+
+                adviceScreen.classList.remove('opacity-100', 'scale-100', 'reveal-active');
+                adviceScreen.classList.add('opacity-0', 'scale-95');
+
+                // Trả ánh sáng nền về tông vàng ấm
+                ambientGlow.classList.remove('bg-emerald-500/10');
+                ambientGlow.classList.add('bg-amber-500/10');
+
+                setTimeout(() => {
+                    adviceScreen.classList.add('hidden');
+                    adviceScreen.classList.remove('flex');
+                    
+                    initialScreen.classList.remove('hidden');
+                    void initialScreen.offsetWidth;
+                    
+                    initialScreen.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                }, 260);
+            }
+
+            btnAdvice.addEventListener('click', showAdvice);
+            btnReplay.addEventListener('click', resetScreen);
+        });
+    </script>
+</body>
+</html>
